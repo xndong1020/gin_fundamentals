@@ -135,7 +135,6 @@ func CreateAlbum(c *gin.Context) {
 
     // Add the new album to the slice.
     albums = append(albums, newAlbum)
-	fmt.Println("albums", albums)
     c.IndentedJSON(http.StatusCreated, newAlbum)
 }
 
@@ -166,7 +165,54 @@ func DeleteAlbumById(c *gin.Context) {
 }
 ```
 
-6. Add nested router group
+6. Add model class `Album`
+
+models/album.go
+
+```go
+package models
+
+type Album struct {
+    Id     int  `json:"id"`
+    Title  string  `json:"title"`
+    Artist string  `json:"artist"`
+    Price  float64 `json:"price"`
+}
+```
+
+7. Add model class validation
+
+```go
+package models
+
+type Album struct {
+    Id     int  `json:"id" binding:"required,numeric,min=1"`
+    Title  string  `json:"title" binding:"required"`
+    Artist string  `json:"artist" binding:"required"`
+    Price  float64 `json:"price" binding:"required,numeric,min=0"`
+}
+```
+
+Meanwhile, in the controller we have a logic to catch the error when parse JSON from request body
+
+```go
+// Call BindJSON to bind the received JSON to newAlbum.
+if err := c.ShouldBindJSON(&newAlbum); err != nil {
+    c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+    return
+}
+```
+
+An example of error message
+
+```
+status 400 Bad Request
+{
+    "error": "Key: 'Album.Price' Error:Field validation for 'Price' failed on the 'min' tag"
+}
+```
+
+8. Add nested Router Group
 
 server.go
 
