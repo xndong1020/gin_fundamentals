@@ -165,3 +165,38 @@ func DeleteAlbumById(c *gin.Context) {
     c.IndentedJSON(http.StatusAccepted, nil)
 }
 ```
+
+6. Add nested router group
+
+server.go
+
+```go
+package main
+
+import (
+	"net/http"
+
+	"acy.com/api/src/controllers"
+	"github.com/gin-gonic/gin"
+)
+
+func main() {
+	r := gin.Default() // setup default router with some common middleware
+
+	r.GET("/", func(c *gin.Context) {
+		c.String(http.StatusOK, "Hello world!")
+	})
+
+	v1 := r.Group("/api/v1")
+	{
+		admin := v1.Group("/albums")
+
+		admin.GET("/", controllers.GetAlbums) // localhost:3000/api/v1/albums
+		admin.GET("/:id", controllers.GetAlbumById) // localhost:3000/api/v1/album/4
+		admin.POST("/", controllers.CreateAlbum) // localhost:3000/api/v1/albums
+		admin.DELETE("/:id", controllers.DeleteAlbumById) // localhost:3000/api/v1/albums/4
+	}
+
+	r.Run(":3000")
+}
+```

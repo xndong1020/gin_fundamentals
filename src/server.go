@@ -14,12 +14,15 @@ func main() {
 		c.String(http.StatusOK, "Hello world!")
 	})
 
-	admin := r.Group("/albums")
+	v1 := r.Group("/api/v1") 
+	{
+		admin := v1.Group("/albums")
 
-	admin.GET("/", controllers.GetAlbums)
-	admin.GET("/:id", controllers.GetAlbumById)
-	admin.POST("/", controllers.CreateAlbum)
-	admin.DELETE("/:id", controllers.DeleteAlbumById)
+		admin.GET("/", controllers.GetAlbums)
+		admin.GET("/:id", controllers.GetAlbumById)
+		admin.POST("/", controllers.CreateAlbum)
+		admin.DELETE("/:id", controllers.DeleteAlbumById)
+	}
 
 	r.Run(":3000")
 }
