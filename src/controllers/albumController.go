@@ -16,10 +16,26 @@ var albums = []models.Album{
     {Id: 3, Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
 }
 
+// @Summary Get Albums list
+// @ID get-albums-list
+// @Description Get Albums list
+// @Tags Album
+// @Produce json
+// @Success 200 {object} []models.Album
+// @Router /albums [get]
 func GetAlbums(c *gin.Context)  {
 	 c.IndentedJSON(http.StatusOK, albums)
 }
 
+// @Summary Get Album By Id
+// @ID get-albums-by-id
+// @Description Get Album By Id
+// @Tags Album
+// @Produce json
+// @Param id path string true "album Id"
+// @Success 200 {object} models.Album
+// @Failure 404 {object} models.Error
+// @Router /albums/{id} [get]
 func GetAlbumById(c *gin.Context) {
     value := c.Param("id")
 	id, err := strconv.ParseInt(value, 10, 0)
@@ -36,25 +52,42 @@ func GetAlbumById(c *gin.Context) {
             return
         }
     }
-    c.IndentedJSON(http.StatusNotFound, gin.H{"message": "album not found"})
+    c.IndentedJSON(http.StatusNotFound, models.Error{Message: "album not found"})
 }
 
+// @Summary Create new album
+// @ID create-new-album
+// @Description Create new album
+// @Tags Album
+// @Produce json
+// @Param data body models.Album true "album data"
+// @Success 200 {object} models.Album
+// @Failure 404 {object} models.Error
+// @Router /albums [post]
 func CreateAlbum(c *gin.Context) {
 	var newAlbum models.Album
 
 	// Call BindJSON to bind the received JSON to
     // newAlbum.
     if err := c.ShouldBindJSON(&newAlbum); err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.AbortWithStatusJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
         return
     }
 
     // Add the new album to the slice.
     albums = append(albums, newAlbum)
-	fmt.Println("albums", albums)
     c.IndentedJSON(http.StatusCreated, newAlbum)
 }
 
+// @Summary Delete Album By Id
+// @ID delete-albums-by-id
+// @Description Delete Album By Id
+// @Tags Album
+// @Produce json
+// @Param id path string true "album Id"
+// @Success 200
+// @Failure 404 {object} models.Error
+// @Router /albums/{id} [delete]
 func DeleteAlbumById(c *gin.Context) {
 	value := c.Param("id")
 	id, err := strconv.ParseInt(value, 10, 0)
@@ -73,7 +106,7 @@ func DeleteAlbumById(c *gin.Context) {
     }
 
 	if index == -1 {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "album not found"})
+		c.IndentedJSON(http.StatusNotFound, models.Error{Message: "album not found"})
 	}
 
     // Remove the target album from the slice.

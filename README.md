@@ -1,16 +1,16 @@
-1. init go module
+#### 1. init go module
 
 ```
 go mod init module acy.com/api
 ```
 
-2. install
+#### 2. install
 
 ```
 go get -u github.com/gin-gonic/gin
 ```
 
-3. Init server file
+#### 3. Init server file
 
 src/server.go
 
@@ -32,7 +32,7 @@ func main() {
 }
 ```
 
-4. Create a bash file for start debugging
+#### 4. Create a bash file for start debugging
 
 ```sh
 #!/bin/bash
@@ -45,7 +45,7 @@ export GIN_MODE=debug
 ./server
 ```
 
-5. Add Router group
+#### 5. Add Router group
 
 server.go
 
@@ -77,7 +77,7 @@ func main() {
 }
 ```
 
-5. Add `controllers`
+#### 6. Add `controllers`
 
 controllers/albumController.go
 
@@ -165,7 +165,7 @@ func DeleteAlbumById(c *gin.Context) {
 }
 ```
 
-6. Add model class `Album`
+#### 7. Add model class `Album`
 
 models/album.go
 
@@ -180,7 +180,7 @@ type Album struct {
 }
 ```
 
-7. Add model class validation
+#### 8. Add model class validation
 
 ```go
 package models
@@ -212,7 +212,7 @@ status 400 Bad Request
 }
 ```
 
-8. Add nested Router Group
+#### 9. Add nested Router Group
 
 server.go
 
@@ -246,3 +246,222 @@ func main() {
 	r.Run(":3000")
 }
 ```
+
+#### 10. Install Swag
+
+```
+go get -u github.com/swaggo/swag/cmd/swag
+go get -u github.com/swaggo/gin-swagger
+go get -u github.com/swaggo/files
+```
+
+#### 11. Add annotations to api
+
+src/server.go
+
+```go
+package main
+
+import (
+	"net/http"
+
+	"acy.com/api/src/controllers"
+	"github.com/gin-gonic/gin"
+
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
+
+	_ "acy.com/api/src/docs"
+)
+
+// @title           Swagger ACY API
+// @version         1.0
+// @description     This is a web api server.
+// @termsOfService  http://swagger.io/terms/
+
+// @contact.name   API Support
+// @contact.url    http://www.swagger.io/support
+// @contact.email  support@swagger.io
+
+// @license.name  Apache 2.0
+// @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
+// @BasePath  /api/v1
+func main() {
+	r := gin.Default() // setup default router with some common middleware
+
+	r.GET("/", func(c *gin.Context) {
+		c.String(http.StatusOK, "Hello world!")
+	})
+
+	// docs route
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	v1 := r.Group("/api/v1")
+	{
+		admin := v1.Group("/albums")
+
+		admin.GET("/", controllers.GetAlbums)
+		admin.GET("/:id", controllers.GetAlbumById)
+		admin.POST("/", controllers.CreateAlbum)
+		admin.DELETE("/:id", controllers.DeleteAlbumById)
+	}
+
+	r.Run(":3000")
+}
+```
+
+src/controllers/albumController.go
+
+```go
+package controllers
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+	"strconv"
+
+	models "acy.com/api/src/models"
+	"github.com/gin-gonic/gin"
+)
+
+var albums = []models.Album{
+	{Id: 1, Title: "Blue Train", Artist: "John Coltrane", Price: 56.99},
+    {Id: 2, Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
+    {Id: 3, Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
+}
+
+// @Summary Get Albums list
+// @ID get-albums-list
+// @Description Get Albums list
+// @Tags Album
+// @Produce json
+// @Success 200 {object} []models.Album
+// @Router /albums [get]
+func GetAlbums(c *gin.Context)  {
+	 c.IndentedJSON(http.StatusOK, albums)
+}
+
+// @Summary Get Album By Id
+// @ID get-albums-by-id
+// @Description Get Album By Id
+// @Tags Album
+// @Produce json
+// @Param id path string true "album Id"
+// @Success 200 {object} models.Album
+// @Failure 404 {object} models.Error
+// @Router /albums/{id} [get]
+func GetAlbumById(c *gin.Context) {
+    value := c.Param("id")
+	id, err := strconv.ParseInt(value, 10, 0)
+
+	if err != nil {
+		log.Fatalln("err",err)
+	}
+
+    // Loop over the list of albums, looking for
+    // an album whose ID value matches the parameter.
+    for _, a := range albums {
+        if a.Id == int(id) {
+            c.IndentedJSON(http.StatusOK, a)
+            return
+        }
+    }
+    c.IndentedJSON(http.StatusNotFound, models.Error{Message: "album not found"})
+}
+
+// @Summary Create new album
+// @ID create-new-album
+// @Description Create new album
+// @Tags Album
+// @Produce json
+// @Param data body models.Album true "album data"
+// @Success 200 {object} models.Album
+// @Failure 404 {object} models.Error
+// @Router /albums [post]
+func CreateAlbum(c *gin.Context) {
+	var newAlbum models.Album
+
+	// Call BindJSON to bind the received JSON to
+    // newAlbum.
+    if err := c.ShouldBindJSON(&newAlbum); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
+        return
+    }
+
+    // Add the new album to the slice.
+    albums = append(albums, newAlbum)
+    c.IndentedJSON(http.StatusCreated, newAlbum)
+}
+
+// @Summary Delete Album By Id
+// @ID delete-albums-by-id
+// @Description Delete Album By Id
+// @Tags Album
+// @Produce json
+// @Param id path string true "album Id"
+// @Success 200
+// @Failure 404 {object} models.Error
+// @Router /albums/{id} [delete]
+func DeleteAlbumById(c *gin.Context) {
+	value := c.Param("id")
+	id, err := strconv.ParseInt(value, 10, 0)
+
+	if err != nil {
+		log.Fatalln("err",err)
+	}
+
+	var index = -1
+
+	for i, v := range albums {
+        if v.Id == int(id) {
+            index = i
+			break
+        }
+    }
+
+	if index == -1 {
+		c.IndentedJSON(http.StatusNotFound, models.Error{Message: "album not found"})
+	}
+
+    // Remove the target album from the slice.
+    albums = append(albums[:index], albums[index + 1:]...)
+	fmt.Println("albums", albums)
+    c.IndentedJSON(http.StatusAccepted, nil)
+}
+```
+
+#### 12: Initialize/Regenerate Swag
+
+```
+swag init
+
+Run swag init in the project's root folder which contains the main.go file. This will parse your comments and generate the required files (docs folder and docs/docs.go
+
+
+swag init -g src/server.go
+
+If your General API annotations do not live in main.go, you can let swag know with -g flag.
+```
+
+If the generation is successful, the `docs` folder structure should be something like
+
+```
+.
+├── controllers
+│   └── albumController.go
+├── docs
+│   ├── docs.go
+│   ├── swagger.json
+│   └── swagger.yaml
+├── models
+│   ├── Album.go
+│   └── Error.go
+└── server.go
+```
+
+#### 13. Open Swagger url
+
+Now you can open up the swagger from `http://localhost:3000/swagger/index.html`
+
+![swagger](./images/swagger.png)
