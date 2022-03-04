@@ -1,20 +1,23 @@
 package controllers
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 
+	"acy.com/api/src/db"
 	models "acy.com/api/src/models"
+	"acy.com/api/src/repositories"
+	"acy.com/api/src/services"
 	"github.com/gin-gonic/gin"
 )
 
-var albums = []models.Album{
-	{Id: 1, Title: "Blue Train", Artist: "John Coltrane", Price: 56.99},
-    {Id: 2, Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
-    {Id: 3, Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
-}
+// var albums = []models.Album{
+// 	{Id: 1, Title: "Blue Train", Artist: "John Coltrane", Price: 56.99},
+//     {Id: 2, Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
+//     {Id: 3, Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
+// }
+var conn, _ = db.GetDbConnection()
+var albumService services.AlbumService = services.NewAlbumService(repositories.NewAlbumRepository(conn))
 
 // @Summary Get Albums list
 // @ID get-albums-list
@@ -24,7 +27,11 @@ var albums = []models.Album{
 // @Success 200 {object} []models.Album
 // @Router /albums [get]
 func GetAlbums(c *gin.Context)  {
-	 c.IndentedJSON(http.StatusOK, albums)
+	albums, err := albumService.FindAll()
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
+	}
+	c.IndentedJSON(http.StatusOK, albums)
 }
 
 // @Summary Get Album By Id
@@ -41,18 +48,18 @@ func GetAlbumById(c *gin.Context) {
 	id, err := strconv.ParseInt(value, 10, 0)
 
 	if err != nil {
-		log.Fatalln("err",err)
+		// log.Fatalln("err",err)
+		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: "Invalid Album Id"})
 	}
 
-    // Loop over the list of albums, looking for
-    // an album whose ID value matches the parameter.
-    for _, a := range albums {
-        if a.Id == int(id) {
-            c.IndentedJSON(http.StatusOK, a)
-            return
-        }
-    }
-    c.IndentedJSON(http.StatusNotFound, models.Error{Message: "album not found"})
+    album, err := albumService.FindById(int(id))
+	
+	if err != nil {
+		// log.Fatalln("err",err)
+		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
+	}
+
+	c.IndentedJSON(http.StatusOK, album)
 }
 
 // @Summary Create new album
@@ -65,18 +72,20 @@ func GetAlbumById(c *gin.Context) {
 // @Failure 404 {object} models.Error
 // @Router /albums [post]
 func CreateAlbum(c *gin.Context) {
-	var newAlbum models.Album
+	var newAlbum models.CreateAlbumDto
 
-	// Call BindJSON to bind the received JSON to
-    // newAlbum.
+	// Call BindJSON to bind the received JSON to newAlbum.
     if err := c.ShouldBindJSON(&newAlbum); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
         return
     }
 
     // Add the new album to the slice.
-    albums = append(albums, newAlbum)
-    c.IndentedJSON(http.StatusCreated, newAlbum)
+    album, err := albumService.Create(newAlbum)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
+	}
+    c.IndentedJSON(http.StatusCreated, album)
 }
 
 // @Summary Delete Album By Id
@@ -93,24 +102,15 @@ func DeleteAlbumById(c *gin.Context) {
 	id, err := strconv.ParseInt(value, 10, 0)
 
 	if err != nil {
-		log.Fatalln("err",err)
+		// log.Fatalln("err",err)
+		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: "Invalid Album Id"})
 	}
 
-	var index = -1
+	err = albumService.Delete(int(id))
 
-	for i, v := range albums {
-        if v.Id == int(id) {
-            index = i
-			break
-        }
-    }
-
-	if index == -1 {
-		c.IndentedJSON(http.StatusNotFound, models.Error{Message: "album not found"})
+	if err != nil {
+		c.IndentedJSON(http.StatusNotFound, models.Error{Message: err.Error()})
 	}
-
-    // Remove the target album from the slice.
-    albums = append(albums[:index], albums[index + 1:]...)
-	fmt.Println("albums", albums)
+	
     c.IndentedJSON(http.StatusAccepted, nil)
 }
