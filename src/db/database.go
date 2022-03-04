@@ -24,3 +24,12 @@ func GetDbConnection() (*sql.DB, error) {
 
 	return db, err
 }
+
+
+func PostgresDbProvider() *sql.DB {
+	db, err := GetDbConnection()
+	if err != nil {
+		panic(err.Error())
+	}
+	return db
+}

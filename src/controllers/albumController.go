@@ -4,9 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"acy.com/api/src/db"
+	"acy.com/api/src/dependencies"
 	models "acy.com/api/src/models"
-	"acy.com/api/src/repositories"
 	"acy.com/api/src/services"
 	"github.com/gin-gonic/gin"
 )
@@ -16,8 +15,12 @@ import (
 //     {Id: 2, Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
 //     {Id: 3, Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
 // }
-var conn, _ = db.GetDbConnection()
-var albumService services.AlbumService = services.NewAlbumService(repositories.NewAlbumRepository(conn))
+// var conn = db.PostgresDbProvider()
+// var serviceRepository = repositories.NewAlbumRepository(conn)
+// var albumService services.AlbumService = services.NewAlbumService(serviceRepository)
+
+var albumService services.AlbumService = dependencies.InitializeAlbumService();
+
 
 // @Summary Get Albums list
 // @ID get-albums-list
