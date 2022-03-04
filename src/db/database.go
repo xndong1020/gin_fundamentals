@@ -12,12 +12,13 @@ const (
 	port     = 5432
 	user     = "root"
 	password = "password"
-	dbname   = "postgres"
+	dbname   = "docker"
+	schema   = "hollywood"
 )
 
 func GetDbConnection() (*sql.DB, error) {
 	// connection string
-	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable search_path=%s", host, port, user, password, dbname, schema)
 
 	// open database
 	db, err := sql.Open("postgres", psqlconn)

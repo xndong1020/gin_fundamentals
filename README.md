@@ -473,12 +473,19 @@ Now you can open up the swagger from `http://localhost:3000/swagger/index.html`
 Postgres
 
 ```sql
-CREATE TABLE public.albums (
-	id BIGSERIAL,
+CREATE TABLE IF NOT EXISTS public.albums (
+	id serial NOT NULL,
 	title VARCHAR(255),
 	artist VARCHAR(255),
-	Price DECIMAL
-)
+	price DECIMAL,
+	CONSTRAINT "PK_tbl_albums" PRIMARY KEY (id)
+);
+
+INSERT INTO public.albums ("title", "artist", "price") VALUES
+('Blue Train','John Coltrane',56.99)
+,('Jeru','Gerry Mulligan',17.99)
+,('Sarah Vaughan and Clifford Brown','Sarah Vaughan',39.99)
+;
 
 ```
 
@@ -934,3 +941,113 @@ src/dependencies/wire_gen.go:17:6: InitializeAlbumService redeclared in this blo
 
 Reference:
 [Dependency Injection in GO with Wire](https://medium.com/wesionary-team/dependency-injection-in-go-with-wire-74f81cd222f6)
+
+#### 16. Init db with bash script
+
+dbscripts/init-user-db.sh
+
+```sh
+#!/bin/bash
+set -e
+
+echo "creating db"
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+    CREATE DATABASE c;
+    GRANT ALL PRIVILEGES ON DATABASE docker TO root;
+
+    \c docker
+
+    CREATE SCHEMA hollywood;
+
+    SET SCHEMA 'hollywood';
+
+    CREATE TABLE IF NOT EXISTS hollywood.albums (
+        id serial NOT NULL,
+        title VARCHAR(255),
+        artist VARCHAR(255),
+        price DECIMAL,
+        CONSTRAINT "PK_tbl_albums" PRIMARY KEY (id)
+    );
+
+    INSERT INTO hollywood.albums ("title", "artist", "price") VALUES
+    ('Blue Train','John Coltrane',56.99)
+    ,('Jeru','Gerry Mulligan',17.99)
+    ,('Sarah Vaughan and Clifford Brown','Sarah Vaughan',39.99)
+    ;
+EOSQL
+```
+
+Note:
+
+1. after creating the new database `docker`, make sure you give the access to `root` user
+2. switch from the default database `postgres`, to the newly create db `docker`, by using command `\c docker`
+
+if the switching is success, from terminal, you should see some thing like below
+
+```
+postgres_1  | creating db
+postgres_1  | CREATE DATABASE
+postgres_1  | GRANT
+postgres_1  | You are now connected to database "docker" as user "root".
+```
+
+3. after creating the new schema `CREATE SCHEMA hollywood;`, switch to the newly created schema, by `SET SCHEMA 'hollywood';`
+
+if the switching is success, from terminal, you should see some thing like below
+
+```
+postgres_1  | CREATE SCHEMA
+postgres_1  | SET
+```
+
+4. update `docker-compose` file
+
+```yml
+version: "3.8"
+services:
+  cache:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    volumes:
+      - cache:/data
+  postgres:
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./dbscripts/init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
+      - ./dbdata2:/var/lib/postgresql/data
+volumes:
+  cache:
+  dbdata2:
+```
+
+5. update the db connection from the code, add `search_path=%s` to specify custom schema we gonna use.
+
+```go
+const (
+	host     = "localhost"
+	port     = 5432
+	user     = "root"
+	password = "password"
+	dbname   = "docker"
+	schema   = "hollywood"
+)
+
+func GetDbConnection() (*sql.DB, error) {
+	// connection string
+	psqlconn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable search_path=%s", host, port, user, password, dbname, schema)
+
+	// open database
+	db, err := sql.Open("postgres", psqlconn)
+
+	return db, err
+}
+```
