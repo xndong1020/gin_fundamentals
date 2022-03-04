@@ -1051,3 +1051,12 @@ func GetDbConnection() (*sql.DB, error) {
 	return db, err
 }
 ```
+
+Note: to clear up the db and initialize a new database, use below command
+
+```
+docker-compose down
+
+docker volume rm $(docker volume ls -q)
+sudo rm -rf dbdata2
+```
