@@ -1147,3 +1147,425 @@ sudo rm -rf dbdata2
 sudo rm -rf mongodb_data
 ```
 
+#### 18. mongodb with GoLang
+
+Step 1: install
+
+```
+go get go.mongodb.org/mongo-driver/mongo
+go get go.mongodb.org/mongo-driver/bson
+
+```
+
+Step 2: Create a MongoDB client instance
+
+db/mongodb.go
+
+```go
+package db
+
+import (
+	"context"
+	"fmt"
+
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
+const (
+	mongodb_host         = "localhost"
+	mongodb_port         = 27017
+	mongodb_user         = "root"
+	mongodb_password     = "password"
+	mongodb_dbname       = "albumsDb"
+	mongodb_collection   = "albums"
+)
+
+func GetMongoDbConnection() *mongo.Client {
+		connectionString := fmt.Sprintf("mongodb://%s:%s@%s:%d", mongodb_user, mongodb_password, mongodb_host, mongodb_port)
+        client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(connectionString))
+        if err != nil {
+            panic(err)
+        }
+		return client
+}
+
+func GetMongoDb() *mongo.Database {
+	client := GetMongoDbConnection()
+	return client.Database(mongodb_dbname)
+}
+```
+
+Step 3: Create a `AlbumMongoDBRepository`
+
+repositories/albumRepository.mongodb.go
+
+```go
+package repositories
+
+import (
+	"context"
+
+	"acy.com/api/src/models"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+)
+
+type AlbumMongoDBRepository struct {
+	dbContext *mongo.Database
+}
+
+func NewAlbumMongoDBRepository(db *mongo.Database) *AlbumMongoDBRepository {
+	 albumMongoDBRepository := AlbumMongoDBRepository{dbContext: db}
+	 return &albumMongoDBRepository
+}
+
+func (albumRepo *AlbumMongoDBRepository) FindAll() []models.AlbumMongoDB  {
+	var results []models.AlbumMongoDB
+	cursor, err := albumRepo.dbContext.Collection("albums").Find(context.TODO(), bson.D{})
+	if err != nil {
+        panic(err)
+	}
+
+	 for cursor.Next(context.TODO()) {
+        //Create a value into which the single document can be decoded
+        var elem models.AlbumMongoDB
+        err := cursor.Decode(&elem)
+        if err != nil {
+            panic(err)
+        }
+
+        results = append(results, elem)
+    }
+
+	return results
+}
+
+func (albumRepo *AlbumMongoDBRepository) FindById(id primitive.ObjectID) models.AlbumMongoDB  {
+	var album models.AlbumMongoDB
+	if err :=  albumRepo.dbContext.Collection("albums").FindOne(context.TODO(), bson.M{"_id": id}).Decode(&album); err != nil {
+        panic(err)
+	}
+	return album
+}
+
+func (albumRepo *AlbumMongoDBRepository) Create(newAlbum models.AlbumMongoDB) string {
+	result, err := albumRepo.dbContext.Collection("albums").InsertOne(context.TODO(), newAlbum)
+
+	if err != nil {
+		panic(err)
+	}
+
+	if oid, ok := result.InsertedID.(primitive.ObjectID); ok {
+    	return oid.Hex()
+	}
+
+	return ""
+}
+
+func (albumRepo *AlbumMongoDBRepository) Delete(id primitive.ObjectID) bool {
+	result, err :=  albumRepo.dbContext.Collection("albums").DeleteOne(context.TODO(), bson.M{"_id": id})
+
+	if err != nil {
+        panic(err)
+	}
+
+	return result.DeletedCount > 0
+}
+```
+
+Note: if filter by other fields, for example 'name':
+
+```go
+db := db.GetMongoDb()
+
+// var album bson.M
+var album models.AlbumMongoDB
+if err :=  db.Collection("albums").FindOne(context.TODO(), bson.M{"name": "tutorials point"}).Decode(&album); err != nil {
+	panic(err)
+}
+```
+
+Step 4: Create `AlbumMongoService`
+
+services/albumService.mongo.go
+
+```go
+package services
+
+import (
+	"acy.com/api/src/models"
+	"acy.com/api/src/repositories"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+type AlbumMongoService struct {
+	repo *repositories.AlbumMongoDBRepository
+}
+
+func NewAlbumMongoService(repo *repositories.AlbumMongoDBRepository) *AlbumMongoService {
+	return &AlbumMongoService{repo: repo}
+}
+
+func (service *AlbumMongoService) FindAll() []models.AlbumMongoDB {
+	return service.repo.FindAll()
+}
+
+func (service *AlbumMongoService) FindById(id primitive.ObjectID) models.AlbumMongoDB {
+	return service.repo.FindById(id)
+}
+
+func (service *AlbumMongoService) Create(newAlbum models.AlbumMongoDB) string {
+	return service.repo.Create(newAlbum)
+}
+
+func (service *AlbumMongoService) Delete(id primitive.ObjectID) bool {
+	return service.repo.Delete(id)
+}
+```
+
+Step 5: use `AlbumMongoService` from AlbumController
+
+```go
+package controllers
+
+import (
+	"net/http"
+	"strconv"
+
+	"acy.com/api/src/dependencies"
+	models "acy.com/api/src/models"
+	"acy.com/api/src/services"
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
+// var albums = []models.Album{
+// 	{Id: 1, Title: "Blue Train", Artist: "John Coltrane", Price: 56.99},
+//     {Id: 2, Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
+//     {Id: 3, Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
+// }
+// var conn = db.PostgresDbProvider()
+// var serviceRepository = repositories.NewAlbumRepository(conn)
+// var albumService services.AlbumService = services.NewAlbumService(serviceRepository)
+
+var albumService *services.AlbumService = dependencies.InitializeAlbumService()
+
+// var mongoDb = db.GetMongoDb()
+// var albumMongoRepository = repositories.NewAlbumMongoDBRepository(mongoDb)
+// var albumMongoService *services.AlbumMongoService = services.NewAlbumMongoService(albumMongoRepository)
+var albumMongoService *services.AlbumMongoService = dependencies.InitializeAlbumMongoDBService()
+
+
+// @Summary Get Albums list
+// @ID get-albums-list
+// @Description Get Albums list
+// @Tags Album
+// @Produce json
+// @Success 200 {object} []models.AlbumResponse
+// @Router /albums [get]
+func GetAlbums(c *gin.Context)  {
+	var response []models.AlbumResponse
+	albums, err := albumService.FindAll()
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
+	}
+	albumsInMongo := albumMongoService.FindAll();
+
+	// create a lookup map
+	albumsInMongoLookup := map[string]string{}
+	// convert the albumsInMongo into a map, the key is ObjectId(in postgres it is ContentId), value is content in mongodb
+	for _, v := range albumsInMongo {
+		albumsInMongoLookup[v.ID.Hex()] = v.Content
+	}
+
+	for _, v := range albums {
+		if val, ok := albumsInMongoLookup[v.ContentId]; ok {
+			response = append(response, models.AlbumResponse{ Id: v.Id, Title: v.Title, Artist: v.Artist, Price: v.Price, Content: val })
+		}
+	}
+
+	c.IndentedJSON(http.StatusOK, response)
+}
+
+// @Summary Get Album By Id
+// @ID get-albums-by-id
+// @Description Get Album By Id
+// @Tags Album
+// @Produce json
+// @Param id path string true "album Id"
+// @Success 200 {object} models.AlbumResponse
+// @Failure 404 {object} models.Error
+// @Router /albums/{id} [get]
+func GetAlbumById(c *gin.Context) {
+    value := c.Param("id")
+	id, err := strconv.ParseInt(value, 10, 0)
+
+	if err != nil {
+		// log.Fatalln("err",err)
+		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: "Invalid Album Id"})
+	}
+
+    album, _ := albumService.FindById(int(id))
+	objectId, err := primitive.ObjectIDFromHex(album.ContentId);
+
+	albumInMongoDb := albumMongoService.FindById(objectId)
+
+	response := models.AlbumResponse{Id: album.Id, Title: album.Title, Artist: album.Artist, Price: album.Price, Content: albumInMongoDb.Content}
+
+	if err != nil {
+		// log.Fatalln("err",err)
+		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
+	}
+
+	c.IndentedJSON(http.StatusOK, response)
+}
+
+// @Summary Create new album
+// @ID create-new-album
+// @Description Create new album
+// @Tags Album
+// @Produce json
+// @Param data body models.Album true "album data"
+// @Success 200 {object} models.Album
+// @Failure 404 {object} models.Error
+// @Router /albums [post]
+func CreateAlbum(c *gin.Context) {
+	var newAlbum models.CreateAlbumDto
+
+	// Call BindJSON to bind the received JSON to newAlbum.
+    if err := c.ShouldBindJSON(&newAlbum); err != nil {
+		c.AbortWithStatusJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
+        return
+    }
+
+	contentId := albumMongoService.Create(models.AlbumMongoDB{Name: newAlbum.Title, Content: newAlbum.Content})
+
+	if contentId == "" {
+		c.AbortWithStatusJSON(http.StatusBadRequest, models.Error{Message: "Unable to save content to db"})
+		return
+	}
+
+	album := models.Album{Title: newAlbum.Title, Artist: newAlbum.Artist, Price: newAlbum.Price, ContentId: contentId}
+    album, err := albumService.Create(album)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
+	}
+    c.IndentedJSON(http.StatusCreated, album)
+}
+
+// @Summary Delete Album By Id
+// @ID delete-albums-by-id
+// @Description Delete Album By Id
+// @Tags Album
+// @Produce json
+// @Param id path string true "album Id"
+// @Success 200
+// @Failure 404 {object} models.Error
+// @Router /albums/{id} [delete]
+func DeleteAlbumById(c *gin.Context) {
+	value := c.Param("id")
+	id, err := strconv.ParseInt(value, 10, 0)
+
+	if err != nil {
+		// log.Fatalln("err",err)
+		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: "Invalid Album Id"})
+	}
+
+	albumInDb, err := albumService.FindById(int(id))
+
+	if err != nil {
+		c.IndentedJSON(http.StatusNotFound,  models.Error{Message: err.Error()})
+	}
+
+	err = albumService.Delete(int(id))
+
+	if err != nil {
+		c.IndentedJSON(http.StatusNotFound, models.Error{Message: err.Error()})
+	}
+
+	objectId, _ := primitive.ObjectIDFromHex(albumInDb.ContentId);
+	isDeleteOk := albumMongoService.Delete(objectId)
+
+	if isDeleteOk {
+		c.IndentedJSON(http.StatusAccepted, nil)
+		return
+	}
+    c.IndentedJSON(http.StatusNotFound, models.Error{Message: "Invalid Content Id"})
+}
+```
+
+Note: to initialize `albumService`, firstly create a manual dependencies creation:
+
+```go
+var mongoDb = db.GetMongoDb()
+var albumMongoRepository = repositories.NewAlbumMongoDBRepository(mongoDb)
+var albumMongoService *services.AlbumMongoService = services.NewAlbumMongoService(albumMongoRepository)
+```
+
+Then again use `google wire` to do the di
+
+dependencies/wire.go
+
+```
+package dependencies
+
+import (
+	"acy.com/api/src/db"
+	"acy.com/api/src/repositories"
+	"acy.com/api/src/services"
+	"github.com/google/wire"
+)
+
+func InitializeAlbumService() *services.AlbumService {
+    wire.Build(repositories.NewAlbumRepository, services.NewAlbumService, db.PostgresDbProvider)
+    return &services.AlbumService{}
+}
+
+func InitializeAlbumMongoDBService() *services.AlbumMongoService {
+    wire.Build(repositories.NewAlbumMongoDBRepository, services.NewAlbumMongoService, db.GetMongoDb)
+    return &services.AlbumMongoService{}
+}
+```
+
+And the generated wire_gen.go
+
+```go
+// Code generated by Wire. DO NOT EDIT.
+
+//go:generate go run github.com/google/wire/cmd/wire
+//go:build !wireinject
+// +build !wireinject
+
+package dependencies
+
+import (
+	"acy.com/api/src/db"
+	"acy.com/api/src/repositories"
+	"acy.com/api/src/services"
+)
+
+// Injectors from wire.go:
+
+func InitializeAlbumService() *services.AlbumService {
+	sqlDB := db.PostgresDbProvider()
+	albumRepository := repositories.NewAlbumRepository(sqlDB)
+	albumService := services.NewAlbumService(albumRepository)
+	return albumService
+}
+
+func InitializeAlbumMongoDBService() *services.AlbumMongoService {
+	database := db.GetMongoDb()
+	albumMongoDBRepository := repositories.NewAlbumMongoDBRepository(database)
+	albumMongoService := services.NewAlbumMongoService(albumMongoDBRepository)
+	return albumMongoService
+}
+
+```
+
+Then in the controller, replace the manual dependencies creation with `InitializeAlbumMongoDBService`
+
+```go
+var albumMongoService *services.AlbumMongoService = dependencies.InitializeAlbumMongoDBService()
+```

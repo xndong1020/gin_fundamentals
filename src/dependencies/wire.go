@@ -7,7 +7,12 @@ package dependencies
 // 	"github.com/google/wire"
 // )
 
-// func InitializeAlbumService() services.AlbumService {
+// func InitializeAlbumService() *services.AlbumService {
 //     wire.Build(repositories.NewAlbumRepository, services.NewAlbumService, db.PostgresDbProvider)
-//     return services.AlbumService{}
+//     return &services.AlbumService{}
+// }
+
+// func InitializeAlbumMongoDBService() *services.AlbumMongoService {
+//     wire.Build(repositories.NewAlbumMongoDBRepository, services.NewAlbumMongoService, db.GetMongoDb)
+//     return &services.AlbumMongoService{}
 // }

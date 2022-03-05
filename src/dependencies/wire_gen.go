@@ -14,9 +14,16 @@ import (
 
 // Injectors from wire.go:
 
-func InitializeAlbumService() services.AlbumService {
+func InitializeAlbumService() *services.AlbumService {
 	sqlDB := db.PostgresDbProvider()
 	albumRepository := repositories.NewAlbumRepository(sqlDB)
 	albumService := services.NewAlbumService(albumRepository)
 	return albumService
+}
+
+func InitializeAlbumMongoDBService() *services.AlbumMongoService {
+	database := db.GetMongoDb()
+	albumMongoDBRepository := repositories.NewAlbumMongoDBRepository(database)
+	albumMongoService := services.NewAlbumMongoService(albumMongoDBRepository)
+	return albumMongoService
 }

@@ -17,12 +17,13 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         title VARCHAR(255),
         artist VARCHAR(255),
         price DECIMAL,
+        content_id VARCHAR(255),
         CONSTRAINT "PK_tbl_albums" PRIMARY KEY (id)
     );
 
-    INSERT INTO hollywood.albums ("title", "artist", "price") VALUES
-    ('Blue Train','John Coltrane',56.99)
-    ,('Jeru','Gerry Mulligan',17.99)
-    ,('Sarah Vaughan and Clifford Brown','Sarah Vaughan',39.99)
+    INSERT INTO hollywood.albums ("title", "artist", "price", "content_id") VALUES
+    ('Blue Train','John Coltrane',56.99,'62232de1ed491fe427b57c0d')
+    ,('Jeru','Gerry Mulligan',17.99,'62232de1ed491fe427b57c0d')
+    ,('Sarah Vaughan and Clifford Brown','Sarah Vaughan',39.99,'62232de1ed491fe427b57c0d')
     ;
 EOSQL
