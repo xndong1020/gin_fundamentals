@@ -17,7 +17,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./dbscripts/init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
+      - ./dbscripts/init-postgres-db.sh:/docker-entrypoint-initdb.d/init-postgres-db.sh
       # - ./dbscripts/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./dbdata2:/var/lib/postgresql/data
 volumes:

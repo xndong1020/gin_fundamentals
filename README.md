@@ -944,7 +944,7 @@ Reference:
 
 #### 16. Init db with bash script
 
-dbscripts/init-user-db.sh
+dbscripts/init-postgres-db.sh
 
 ```sh
 #!/bin/bash
@@ -1022,7 +1022,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./dbscripts/init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
+      - ./dbscripts/init-postgres-db.sh:/docker-entrypoint-initdb.d/init-postgres-db.sh
       - ./dbdata2:/var/lib/postgresql/data
 volumes:
   cache:
