@@ -942,7 +942,7 @@ src/dependencies/wire_gen.go:17:6: InitializeAlbumService redeclared in this blo
 Reference:
 [Dependency Injection in GO with Wire](https://medium.com/wesionary-team/dependency-injection-in-go-with-wire-74f81cd222f6)
 
-#### 16. Init db with bash script
+#### 16. Init postgres db with bash script
 
 dbscripts/init-postgres-db.sh
 
@@ -1060,3 +1060,90 @@ docker-compose down
 docker volume rm $(docker volume ls -q)
 sudo rm -rf dbdata2
 ```
+
+#### 17. Init mongodb with bash script
+
+Step 1: create a bash file `dbscript/init-mongo-db.sh`
+
+```sh
+#!/bin/bash
+set -e
+
+echo "creating mongodb"
+
+mongosh -- "$MONGO_INITDB_DATABASE" <<EOF
+    var rootUser = '$MONGO_INITDB_ROOT_USERNAME';
+    var rootPassword = '$MONGO_INITDB_ROOT_PASSWORD';
+    var admin = db.getSiblingDB('admin');
+    admin.auth(rootUser, rootPassword);
+
+    # for creating a non-admin user
+    # var user = '$MONGO_INITDB_ROOT_USERNAME';
+    # var passwd = '$MONGO_INITDB_ROOT_PASSWORD';
+    # db.createUser({user: user, pwd: passwd, roles: ["readWrite"]});
+
+    show dbs
+
+    # create albumsDb database, then switch to albumsDb
+    use albumsDb
+
+    # create collection albums
+    db.createCollection("albums")
+
+    db.albums.insertOne({"name":"tutorials point", "content": "some content"})
+    db.albums.findOne({"name":"tutorials point"})
+EOF
+```
+
+Step 2: modify docker-compose file
+
+```yml
+version: "3.8"
+services:
+  cache:
+    image: redis:6.2-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    volumes:
+      - cache:/data
+  postgres:
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./dbscripts/init-postgres-db.sh:/docker-entrypoint-initdb.d/init-postgres-db.sh
+      # - ./dbscripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./dbdata2:/var/lib/postgresql/data
+  mongodb:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    command: "--storageEngine wiredTiger"
+    ports:
+      - 27017:27017
+    volumes:
+      - ./dbscripts/init-mongo-db.sh:/docker-entrypoint-initdb.d/init-mongo-db.sh
+      - ./mongodb_data:/data/db
+volumes:
+  cache:
+  dbdata2:
+  mongodb_data:
+```
+
+Note: to clear up the db and initialize a new database, use below command
+
+```
+docker-compose down
+
+docker volume rm $(docker volume ls -q)
+sudo rm -rf dbdata2
+sudo rm -rf mongodb_data
+```
+

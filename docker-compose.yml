@@ -20,6 +20,18 @@ services:
       - ./dbscripts/init-postgres-db.sh:/docker-entrypoint-initdb.d/init-postgres-db.sh
       # - ./dbscripts/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./dbdata2:/var/lib/postgresql/data
+  mongodb:
+    image: mongo:latest
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    command: "--storageEngine wiredTiger"
+    ports:
+      - 27017:27017
+    volumes:
+      - ./dbscripts/init-mongo-db.sh:/docker-entrypoint-initdb.d/init-mongo-db.sh
+      - ./mongodb_data:/data/db
 volumes:
   cache:
   dbdata2:
+  mongodb_data:
