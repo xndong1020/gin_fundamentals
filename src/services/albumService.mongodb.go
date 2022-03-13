@@ -3,40 +3,29 @@ package services
 import (
 	"acy.com/api/src/models"
 	"acy.com/api/src/repositories"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type IAlbumService interface {
-	// repositories.IAlbumRepository
-	FindAll() ([]models.Album, error)
-	FindById(id int) (models.Album, error)
-	Create(newAlbum models.CreateAlbumDto) (models.Album, error)
-	Delete(id int) error
+type AlbumMongoService struct {
+	repo *repositories.AlbumMongoDBRepository
 }
 
-type AlbumService struct {
-	repo *repositories.AlbumRepository
+func NewAlbumMongoService(repo *repositories.AlbumMongoDBRepository) *AlbumMongoService {
+	return &AlbumMongoService{repo: repo}
 }
 
-func NewAlbumService(repo *repositories.AlbumRepository) *AlbumService {
-	return &AlbumService{ repo: repo }
+func (service *AlbumMongoService) FindAll() []models.AlbumMongoDB {
+	return service.repo.FindAll()
 }
 
-func (service *AlbumService) FindAll() ([]models.Album, error) {
-	albums, err := service.repo.FindAll();
-	return albums, err 
+func (service *AlbumMongoService) FindById(id primitive.ObjectID) models.AlbumMongoDB {
+	return service.repo.FindById(id)
 }
 
-func (service *AlbumService) FindById(id int) (models.Album, error) {
-	album, err := service.repo.FindById(id);
-	return album, err
+func (service *AlbumMongoService) Create(newAlbum models.AlbumMongoDB) string {
+	return service.repo.Create(newAlbum)
 }
 
-func (service *AlbumService) Create(newAlbum models.Album) (models.Album, error) {
-	album, err := service.repo.Create(newAlbum);
-	return album, err
-}
-
-func (service *AlbumService) Delete(id int) error {
-	err := service.repo.Delete(id);
-	return err
+func (service *AlbumMongoService) Delete(id primitive.ObjectID) bool {
+	return service.repo.Delete(id)
 }

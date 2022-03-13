@@ -4,6 +4,8 @@ import (
 	"database/sql"
 
 	"acy.com/api/src/models"
+	utils "acy.com/api/src/utils"
+	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -17,16 +19,20 @@ type IAlbumRepository interface {
 
 type AlbumRepository struct {
 	dbContext *gorm.DB
+	logger	*zap.Logger
 }
 
 func NewAlbumRepository(sqlDB *sql.DB) *AlbumRepository {
 	gormDB, err := gorm.Open(postgres.New(postgres.Config{ Conn: sqlDB,}), &gorm.Config{})
+	logger := utils.NewLogger()
 	
 	if err != nil {
-		panic("gorm connection error")
+			logger.Error("gorm connection error", 
+			zap.String("error", err.Error()),
+		)
 	}
 
-	return &AlbumRepository{ dbContext: gormDB }
+	return &AlbumRepository{ dbContext: gormDB, logger: logger }
 }
 
 func (repo *AlbumRepository) FindAll() ([]models.Album, error) {

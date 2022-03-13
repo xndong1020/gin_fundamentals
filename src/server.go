@@ -4,6 +4,8 @@ import (
 	"net/http"
 
 	"acy.com/api/src/controllers"
+	"acy.com/api/src/middlewares"
+	"acy.com/api/src/utils"
 	"github.com/gin-gonic/gin"
 
 	swaggerFiles "github.com/swaggo/files"
@@ -25,7 +27,9 @@ import (
 // @license.url   http://www.apache.org/licenses/LICENSE-2.0.html
 // @BasePath  /api/v1
 func main() {
-	r := gin.Default() // setup default router with some common middleware
+	logger := utils.NewLogger()
+	r := gin.New() // disable default router and some common middleware
+	r.Use(middlewares.GinLogger(logger), middlewares.GinRecovery(logger, true))
 
 	r.GET("/", func(c *gin.Context) {
 		c.String(http.StatusOK, "Hello world!")
