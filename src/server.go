@@ -34,7 +34,7 @@ func main() {
 	// docs route
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
-	v1 := r.Group("/api/v1") 
+	v1 := r.Group("/api/v1")
 	{
 		admin := v1.Group("/albums")
 

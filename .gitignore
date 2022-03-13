@@ -23,3 +23,10 @@ go.work
 # docker related
 dbdata2
 mongodb_data
+
+# compiled file
+server
+
+# IDE
+.idea
+.vscode
