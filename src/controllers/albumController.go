@@ -53,6 +53,8 @@ func GetAlbums(c *gin.Context)  {
 	for _, v := range albums {
 		if val, ok := albumsInMongoLookup[v.ContentId]; ok {
 			response = append(response, models.AlbumResponse{ Id: v.Id, Title: v.Title, Artist: v.Artist, Price: v.Price, Content: val })
+		} else {
+			response = append(response, models.AlbumResponse{ Id: v.Id, Title: v.Title, Artist: v.Artist, Price: v.Price, })
 		}
 	}
 
