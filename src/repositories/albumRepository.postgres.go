@@ -3,8 +3,8 @@ package repositories
 import (
 	"database/sql"
 
+	libs "acy.com/api/src/lib"
 	"acy.com/api/src/models"
-	utils "acy.com/api/src/utils"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -24,7 +24,7 @@ type AlbumRepository struct {
 
 func NewAlbumRepository(sqlDB *sql.DB) *AlbumRepository {
 	gormDB, err := gorm.Open(postgres.New(postgres.Config{ Conn: sqlDB,}), &gorm.Config{})
-	logger := utils.NewLogger()
+	logger := libs.NewZapLogger()
 	
 	if err != nil {
 			logger.Error("gorm connection error", 

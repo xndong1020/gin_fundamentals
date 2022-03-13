@@ -1,8 +1,8 @@
-package utils
+package lib
 
 import "go.uber.org/zap"
 
-func NewLogger() *zap.Logger {
+func NewZapLogger() *zap.Logger {
 	logger, _ := zap.NewProduction()
 	defer logger.Sync()
 	return logger
