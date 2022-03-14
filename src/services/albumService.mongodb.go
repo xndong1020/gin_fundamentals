@@ -6,26 +6,34 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type AlbumMongoService struct {
-	repo *repositories.AlbumMongoDBRepository
+type IAlbumMongoService interface {
+	FindAll() []models.AlbumMongoDB
+	FindById(id primitive.ObjectID) models.AlbumMongoDB
+	Create(newAlbum models.AlbumMongoDB) string
+	Delete(id primitive.ObjectID) bool
 }
 
-func NewAlbumMongoService(repo *repositories.AlbumMongoDBRepository) *AlbumMongoService {
-	return &AlbumMongoService{repo: repo}
+type albumMongoService struct {
+	repo *repositories.IAlbumMongoDBRepository
 }
 
-func (service *AlbumMongoService) FindAll() []models.AlbumMongoDB {
-	return service.repo.FindAll()
+// constructor
+func AlbumMongoService(repo *repositories.IAlbumMongoDBRepository) *albumMongoService {
+	return &albumMongoService{repo: repo}
 }
 
-func (service *AlbumMongoService) FindById(id primitive.ObjectID) models.AlbumMongoDB {
-	return service.repo.FindById(id)
+func (service *albumMongoService) FindAll() []models.AlbumMongoDB {
+	return (*service.repo).FindAll()
 }
 
-func (service *AlbumMongoService) Create(newAlbum models.AlbumMongoDB) string {
-	return service.repo.Create(newAlbum)
+func (service *albumMongoService) FindById(id primitive.ObjectID) models.AlbumMongoDB {
+	return (*service.repo).FindById(id)
 }
 
-func (service *AlbumMongoService) Delete(id primitive.ObjectID) bool {
-	return service.repo.Delete(id)
+func (service *albumMongoService) Create(newAlbum models.AlbumMongoDB) string {
+	return (*service.repo).Create(newAlbum)
+}
+
+func (service *albumMongoService) Delete(id primitive.ObjectID) bool {
+	return (*service.repo).Delete(id)
 }

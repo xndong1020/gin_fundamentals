@@ -8,11 +8,11 @@ package dependencies
 // )
 
 // func InitializeAlbumService() *services.AlbumService {
-//     wire.Build(repositories.NewAlbumRepository, services.NewAlbumService, db.PostgresDbProvider)
+//     wire.Build(repositories.AlbumRepository, services.AlbumService, db.PostgresDbProvider)
 //     return &services.AlbumService{}
 // }
 
 // func InitializeAlbumMongoDBService() *services.AlbumMongoService {
-//     wire.Build(repositories.NewAlbumMongoDBRepository, services.NewAlbumMongoService, db.GetMongoDb)
+//     wire.Build(repositories.AlbumMongoDBRepository, services.AlbumMongoService, db.GetMongoDb)
 //     return &services.AlbumMongoService{}
 // }

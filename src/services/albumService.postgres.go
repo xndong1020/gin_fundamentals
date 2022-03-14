@@ -8,34 +8,40 @@ import (
 type IAlbumService interface {
 	FindAll() ([]models.Album, error)
 	FindById(id int) (models.Album, error)
-	Create(newAlbum models.CreateAlbumDto) (models.Album, error)
+	Create(newAlbum models.Album) (models.Album, error)
 	Delete(id int) error
 }
 
-type AlbumService struct {
-	repo *repositories.AlbumRepository
+type albumService struct {
+	repo *repositories.IAlbumRepository
 }
 
-func NewAlbumService(repo *repositories.AlbumRepository) *AlbumService {
-	return &AlbumService{ repo: repo }
+// constructor
+func AlbumService(repo *repositories.IAlbumRepository) *albumService {
+	return &albumService{ repo: repo }
 }
 
-func (service *AlbumService) FindAll() ([]models.Album, error) {
-	albums, err := service.repo.FindAll();
+/* interface implementations */
+func (service *albumService) FindAll() ([]models.Album, error) {
+	repo := *service.repo
+	albums, err := repo.FindAll();
 	return albums, err 
 }
 
-func (service *AlbumService) FindById(id int) (models.Album, error) {
-	album, err := service.repo.FindById(id);
+func (service *albumService) FindById(id int) (models.Album, error) {
+	repo := *service.repo
+	album, err := repo.FindById(id);
 	return album, err
 }
 
-func (service *AlbumService) Create(newAlbum models.Album) (models.Album, error) {
-	album, err := service.repo.Create(newAlbum);
+func (service *albumService) Create(newAlbum models.Album) (models.Album, error) {
+	repo := *service.repo
+	album, err := repo.Create(newAlbum);
 	return album, err
 }
 
-func (service *AlbumService) Delete(id int) error {
-	err := service.repo.Delete(id);
+func (service *albumService) Delete(id int) error {
+	repo := *service.repo
+	err := repo.Delete(id);
 	return err
 }

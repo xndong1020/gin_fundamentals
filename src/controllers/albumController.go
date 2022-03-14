@@ -16,16 +16,16 @@ import (
 //     {Id: 2, Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
 //     {Id: 3, Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
 // }
-// var conn = db.PostgresDbProvider()
-// var serviceRepository = repositories.NewAlbumRepository(conn)
-// var albumService services.AlbumService = services.NewAlbumService(serviceRepository)
+// sqlDB := db.PostgresDbProvider()
+// var albumRepository repositories.IAlbumRepository = repositories.AlbumRepository(sqlDB)
+// var albumService services.IAlbumService = services.AlbumService(&albumRepository)
 
-var albumService *services.AlbumService = dependencies.InitializeAlbumService()
+var albumService *services.IAlbumService = dependencies.InitializeAlbumService()
 
-// var mongoDb = db.GetMongoDb()
-// var albumMongoRepository = repositories.NewAlbumMongoDBRepository(mongoDb)
-// var albumMongoService *services.AlbumMongoService = services.NewAlbumMongoService(albumMongoRepository)
-var albumMongoService *services.AlbumMongoService = dependencies.InitializeAlbumMongoDBService()
+// database := db.GetMongoDb()
+// var albumMongoDBRepository repositories.IAlbumMongoDBRepository = repositories.AlbumMongoDBRepository(database)
+// var albumMongoService services.IAlbumMongoService = services.AlbumMongoService(&albumMongoDBRepository)
+var albumMongoService *services.IAlbumMongoService = dependencies.InitializeAlbumMongoDBService()
 
 
 // @Summary Get Albums list
@@ -37,11 +37,11 @@ var albumMongoService *services.AlbumMongoService = dependencies.InitializeAlbum
 // @Router /albums [get]
 func GetAlbums(c *gin.Context)  {
 	var response []models.AlbumResponse
-	albums, err := albumService.FindAll()
+	albums, err := (*albumService).FindAll()
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
 	}
-	albumsInMongo := albumMongoService.FindAll();
+	albumsInMongo := (*albumMongoService).FindAll();
 
 	// create a lookup map
 	albumsInMongoLookup := map[string]string{}
@@ -79,10 +79,10 @@ func GetAlbumById(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: "Invalid Album Id"})
 	}
 
-    album, _ := albumService.FindById(int(id))
+    album, _ := (*albumService).FindById(int(id))
 	objectId, err := primitive.ObjectIDFromHex(album.ContentId);
 
-	albumInMongoDb := albumMongoService.FindById(objectId)
+	albumInMongoDb := (*albumMongoService).FindById(objectId)
 
 	response := models.AlbumResponse{Id: album.Id, Title: album.Title, Artist: album.Artist, Price: album.Price, Content: albumInMongoDb.Content}
 
@@ -112,7 +112,7 @@ func CreateAlbum(c *gin.Context) {
         return
     }
 
-	contentId := albumMongoService.Create(models.AlbumMongoDB{Name: newAlbum.Title, Content: newAlbum.Content})
+	contentId := (*albumMongoService).Create(models.AlbumMongoDB{Name: newAlbum.Title, Content: newAlbum.Content})
 
 	if contentId == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, models.Error{Message: "Unable to save content to db"})
@@ -120,7 +120,7 @@ func CreateAlbum(c *gin.Context) {
 	}
 
 	album := models.Album{Title: newAlbum.Title, Artist: newAlbum.Artist, Price: newAlbum.Price, ContentId: contentId}
-    album, err := albumService.Create(album)
+    album, err := (*albumService).Create(album)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
 	}
@@ -145,20 +145,20 @@ func DeleteAlbumById(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: "Invalid Album Id"})
 	}
 
-	albumInDb, err := albumService.FindById(int(id))
+	albumInDb, err := (*albumService).FindById(int(id))
 
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound,  models.Error{Message: err.Error()})
 	}
 
-	err = albumService.Delete(int(id))
+	err = (*albumService).Delete(int(id))
 
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, models.Error{Message: err.Error()})
 	}
 
 	objectId, _ := primitive.ObjectIDFromHex(albumInDb.ContentId);
-	isDeleteOk := albumMongoService.Delete(objectId)
+	isDeleteOk := (*albumMongoService).Delete(objectId)
 
 	if isDeleteOk {
 		c.IndentedJSON(http.StatusAccepted, nil)

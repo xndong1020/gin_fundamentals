@@ -9,16 +9,24 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type AlbumMongoDBRepository struct {
+type IAlbumMongoDBRepository interface {
+	FindAll() []models.AlbumMongoDB
+	FindById(id primitive.ObjectID) models.AlbumMongoDB
+	Create(newAlbum models.AlbumMongoDB) string
+	Delete(id primitive.ObjectID) bool
+}
+
+type albumMongoDBRepository struct {
 	dbContext *mongo.Database
 }
 
-func NewAlbumMongoDBRepository(db *mongo.Database) *AlbumMongoDBRepository {
-	 albumMongoDBRepository := AlbumMongoDBRepository{dbContext: db}
+// constructor
+func AlbumMongoDBRepository(db *mongo.Database) *albumMongoDBRepository {
+	 albumMongoDBRepository := albumMongoDBRepository{dbContext: db}
 	 return &albumMongoDBRepository
 }
 
-func (albumRepo *AlbumMongoDBRepository) FindAll() []models.AlbumMongoDB  {
+func (albumRepo *albumMongoDBRepository) FindAll() []models.AlbumMongoDB  {
 	var results []models.AlbumMongoDB
 	cursor, err := albumRepo.dbContext.Collection("albums").Find(context.TODO(), bson.D{})
 	if err != nil {
@@ -39,7 +47,7 @@ func (albumRepo *AlbumMongoDBRepository) FindAll() []models.AlbumMongoDB  {
 	return results
 }
 
-func (albumRepo *AlbumMongoDBRepository) FindById(id primitive.ObjectID) models.AlbumMongoDB  {
+func (albumRepo *albumMongoDBRepository) FindById(id primitive.ObjectID) models.AlbumMongoDB  {
 	var album models.AlbumMongoDB
 	if err :=  albumRepo.dbContext.Collection("albums").FindOne(context.TODO(), bson.M{"_id": id}).Decode(&album); err != nil {
         panic(err)
@@ -47,7 +55,7 @@ func (albumRepo *AlbumMongoDBRepository) FindById(id primitive.ObjectID) models.
 	return album
 }
 
-func (albumRepo *AlbumMongoDBRepository) Create(newAlbum models.AlbumMongoDB) string {
+func (albumRepo *albumMongoDBRepository) Create(newAlbum models.AlbumMongoDB) string {
 	result, err := albumRepo.dbContext.Collection("albums").InsertOne(context.TODO(), newAlbum)
 
 	if err != nil {
@@ -61,7 +69,7 @@ func (albumRepo *AlbumMongoDBRepository) Create(newAlbum models.AlbumMongoDB) st
 	return ""
 }
 
-func (albumRepo *AlbumMongoDBRepository) Delete(id primitive.ObjectID) bool {
+func (albumRepo *albumMongoDBRepository) Delete(id primitive.ObjectID) bool {
 	result, err :=  albumRepo.dbContext.Collection("albums").DeleteOne(context.TODO(), bson.M{"_id": id}) 
 	
 	if err != nil {
