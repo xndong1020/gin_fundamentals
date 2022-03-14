@@ -16,10 +16,12 @@ type albumMongoService struct {
 	repo *repositories.IAlbumMongoDBRepository
 }
 
-// constructor
+// AlbumMongoService constructor
 func AlbumMongoService(repo *repositories.IAlbumMongoDBRepository) *albumMongoService {
 	return &albumMongoService{repo: repo}
 }
+
+/*** interface implementations ***/
 
 func (service *albumMongoService) FindAll() []entities.AlbumMongoDB {
 	return (*service.repo).FindAll()

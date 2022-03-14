@@ -18,28 +18,28 @@ type IAlbumRepository interface {
 	Delete(id uint) error
 }
 
-type albumRepository  struct {
+type albumRepository struct {
 	dbContext *gorm.DB
-	logger	*zap.Logger
+	logger    *zap.Logger
 }
 
-// constructor
+// AlbumRepository constructor
 func AlbumRepository(sqlDB *sql.DB) *albumRepository {
-	gormDB, err := gorm.Open(postgres.New(postgres.Config{ Conn: sqlDB,}), &gorm.Config{})
+	gormDB, err := gorm.Open(postgres.New(postgres.Config{Conn: sqlDB}), &gorm.Config{})
 	logger := libs.NewZapLogger()
-	
+
 	if err != nil {
-			logger.Error("gorm connection error", 
+		logger.Error("gorm connection error",
 			zap.String("error", err.Error()),
 		)
 	}
 
-	return &albumRepository{ dbContext: gormDB, logger: logger }
+	return &albumRepository{dbContext: gormDB, logger: logger}
 }
 
-/* interface implementations */
+// FindAll /* interface implementations */
 func (repo *albumRepository) FindAll() ([]entities.Album, error) {
-	albums := []entities.Album{}
+	var albums []entities.Album
 	result := repo.dbContext.Debug().Find(&albums)
 	return albums, result.Error
 }
@@ -69,4 +69,3 @@ func (repo *albumRepository) Delete(id uint) error {
 	result = repo.dbContext.Debug().Delete(&targetAlbum, id)
 	return result.Error
 }
-

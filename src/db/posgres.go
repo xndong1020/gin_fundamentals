@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/joho/godotenv"
+	"acy.com/api/src/utils"
 	_ "github.com/lib/pq"
 )
 
@@ -15,7 +15,7 @@ const (
 )
 
 func GetDbConnection() (*sql.DB, error) {
-	godotenv.Load(".env")
+	utils.InitEnv()
 
 	var (
 		host   = os.Getenv("POSTGRES_HOST")

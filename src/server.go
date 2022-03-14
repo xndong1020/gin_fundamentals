@@ -48,5 +48,9 @@ func main() {
 		admin.DELETE("/:id", controllers.DeleteAlbumById)
 	}
 
-	r.Run(":3000")
+	err := r.Run(":3000")
+
+	if err != nil {
+		panic(err.Error())
+	}
 }
