@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"acy.com/api/src/dependencies"
+	entities "acy.com/api/src/entities"
 	models "acy.com/api/src/models"
 	"acy.com/api/src/services"
 	"github.com/gin-gonic/gin"
@@ -112,14 +113,14 @@ func CreateAlbum(c *gin.Context) {
         return
     }
 
-	contentId := (*albumMongoService).Create(models.AlbumMongoDB{Name: newAlbum.Title, Content: newAlbum.Content})
+	contentId := (*albumMongoService).Create(entities.AlbumMongoDB{Name: newAlbum.Title, Content: newAlbum.Content})
 
 	if contentId == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, models.Error{Message: "Unable to save content to db"})
 		return
 	}
 
-	album := models.Album{Title: newAlbum.Title, Artist: newAlbum.Artist, Price: newAlbum.Price, ContentId: contentId}
+	album := entities.Album{Title: newAlbum.Title, Artist: newAlbum.Artist, Price: newAlbum.Price, ContentId: contentId}
     album, err := (*albumService).Create(album)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: err.Error()})

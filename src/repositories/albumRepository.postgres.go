@@ -3,17 +3,17 @@ package repositories
 import (
 	"database/sql"
 
+	entities "acy.com/api/src/entities"
 	libs "acy.com/api/src/lib"
-	"acy.com/api/src/models"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type IAlbumRepository interface {
-	FindAll() ([]models.Album, error)
-	FindById(id int) (models.Album, error)
-	Create(newAlbum models.Album) (models.Album, error)
+	FindAll() ([]entities.Album, error)
+	FindById(id int) (entities.Album, error)
+	Create(newAlbum entities.Album) (entities.Album, error)
 	Delete(id int) error
 }
 
@@ -37,25 +37,25 @@ func AlbumRepository(sqlDB *sql.DB) *albumRepository {
 }
 
 /* interface implementations */
-func (repo *albumRepository) FindAll() ([]models.Album, error) {
-	albums := []models.Album{}
+func (repo *albumRepository) FindAll() ([]entities.Album, error) {
+	albums := []entities.Album{}
 	result := repo.dbContext.Debug().Find(&albums)
 	return albums, result.Error
 }
 
-func (repo *albumRepository) FindById(id int) (models.Album, error) {
-	album := models.Album{}
+func (repo *albumRepository) FindById(id int) (entities.Album, error) {
+	album := entities.Album{}
 	result := repo.dbContext.Debug().Find(&album, "id", id)
 	return album, result.Error
 }
 
-func (repo *albumRepository) Create(newAlbum models.Album) (models.Album, error) {
+func (repo *albumRepository) Create(newAlbum entities.Album) (entities.Album, error) {
 	result := repo.dbContext.Debug().Create(&newAlbum)
 	return newAlbum, result.Error
 }
 
 func (repo *albumRepository) Delete(id int) error {
-	targetAlbum := models.Album{}
+	targetAlbum := entities.Album{}
 	result := repo.dbContext.Debug().Find(&targetAlbum, "id", id)
 	if result.Error != nil {
 		return result.Error

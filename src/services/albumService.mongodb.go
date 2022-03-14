@@ -1,15 +1,15 @@
 package services
 
 import (
-	"acy.com/api/src/models"
+	entities "acy.com/api/src/entities"
 	"acy.com/api/src/repositories"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type IAlbumMongoService interface {
-	FindAll() []models.AlbumMongoDB
-	FindById(id primitive.ObjectID) models.AlbumMongoDB
-	Create(newAlbum models.AlbumMongoDB) string
+	FindAll() []entities.AlbumMongoDB
+	FindById(id primitive.ObjectID) entities.AlbumMongoDB
+	Create(newAlbum entities.AlbumMongoDB) string
 	Delete(id primitive.ObjectID) bool
 }
 
@@ -22,15 +22,15 @@ func AlbumMongoService(repo *repositories.IAlbumMongoDBRepository) *albumMongoSe
 	return &albumMongoService{repo: repo}
 }
 
-func (service *albumMongoService) FindAll() []models.AlbumMongoDB {
+func (service *albumMongoService) FindAll() []entities.AlbumMongoDB {
 	return (*service.repo).FindAll()
 }
 
-func (service *albumMongoService) FindById(id primitive.ObjectID) models.AlbumMongoDB {
+func (service *albumMongoService) FindById(id primitive.ObjectID) entities.AlbumMongoDB {
 	return (*service.repo).FindById(id)
 }
 
-func (service *albumMongoService) Create(newAlbum models.AlbumMongoDB) string {
+func (service *albumMongoService) Create(newAlbum entities.AlbumMongoDB) string {
 	return (*service.repo).Create(newAlbum)
 }
 
