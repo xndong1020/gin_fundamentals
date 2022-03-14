@@ -53,9 +53,9 @@ func GetAlbums(c *gin.Context)  {
 
 	for _, v := range albums {
 		if val, ok := albumsInMongoLookup[v.Id]; ok {
-			response = append(response, models.AlbumResponse{ Id: v.Id, Title: v.Title, Artist: v.Artist, Price: v.Price, Content: val })
+			response = append(response, models.AlbumResponse{   Id: v.Id, Title: v.Title, Artist: v.Artist, Price: v.Price, HasRead: v.HasRead, Content: val })
 		} else {
-			response = append(response, models.AlbumResponse{ Id: v.Id, Title: v.Title, Artist: v.Artist, Price: v.Price, })
+			response = append(response, models.AlbumResponse{ Id: v.Id, Title: v.Title, Artist: v.Artist, Price: v.Price, HasRead: v.HasRead,})
 		}
 	}
 
@@ -85,7 +85,7 @@ func GetAlbumById(c *gin.Context) {
 
 	albumInMongoDb := (*albumMongoService).FindById(uint(album.Id))
 
-	response := models.AlbumResponse{Id: album.Id, Title: album.Title, Artist: album.Artist, Price: album.Price, Content: albumInMongoDb.Content}
+	response := models.AlbumResponse{Id: album.Id, Title: album.Title, Artist: album.Artist, Price: album.Price, HasRead: album.HasRead, Content: albumInMongoDb.Content}
 
 	if err != nil {
 		// log.Fatalln("err",err)

@@ -23,25 +23,24 @@ func AlbumService(repo *repositories.IAlbumRepository) *albumService {
 
 /* interface implementations */
 func (service *albumService) FindAll() ([]entities.Album, error) {
-	repo := *service.repo
-	albums, err := repo.FindAll();
+	albums, err := (*service.repo).FindAll();
 	return albums, err 
 }
 
 func (service *albumService) FindById(id uint) (entities.Album, error) {
-	repo := *service.repo
-	album, err := repo.FindById(id);
-	return album, err
+	albumInDb, err := (*service.repo).FindById(id);
+	if !albumInDb.HasRead {
+		(*service.repo).Update(albumInDb.Id, "has_read", true)
+	}
+	return albumInDb, err
 }
 
 func (service *albumService) Create(newAlbum entities.Album) (entities.Album, error) {
-	repo := *service.repo
-	album, err := repo.Create(newAlbum);
+	album, err := (*service.repo).Create(newAlbum);
 	return album, err
 }
 
 func (service *albumService) Delete(id uint) error {
-	repo := *service.repo
-	err := repo.Delete(id);
+	err := (*service.repo).Delete(id);
 	return err
 }

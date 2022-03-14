@@ -17,6 +17,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
         title VARCHAR(255),
         artist VARCHAR(255),
         price DECIMAL,
+        has_read BOOLEAN DEFAULT FALSE,
         CONSTRAINT "PK_tbl_albums" PRIMARY KEY (id)
     );
 

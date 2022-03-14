@@ -6,4 +6,5 @@ type AlbumResponse struct {
     Artist string  `json:"artist"`
     Price  float64 `json:"price"`
 	Content string `json:"content"`
+    HasRead bool `json:"has_read"`
 }

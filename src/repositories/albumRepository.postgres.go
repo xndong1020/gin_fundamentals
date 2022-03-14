@@ -14,6 +14,7 @@ type IAlbumRepository interface {
 	FindAll() ([]entities.Album, error)
 	FindById(id uint) (entities.Album, error)
 	Create(newAlbum entities.Album) (entities.Album, error)
+	Update(id uint, column string, value interface{})
 	Delete(id uint) error
 }
 
@@ -52,6 +53,11 @@ func (repo *albumRepository) FindById(id uint) (entities.Album, error) {
 func (repo *albumRepository) Create(newAlbum entities.Album) (entities.Album, error) {
 	result := repo.dbContext.Debug().Create(&newAlbum)
 	return newAlbum, result.Error
+}
+
+func (repo *albumRepository) Update(id uint, column string, value interface{}) {
+	album := entities.Album{}
+	repo.dbContext.Debug().Model(&album).Where("id = ?", id).Update(column, value)
 }
 
 func (repo *albumRepository) Delete(id uint) error {
