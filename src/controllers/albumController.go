@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -9,7 +10,6 @@ import (
 	models "acy.com/api/src/models"
 	"acy.com/api/src/services"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // var albums = []models.Album{
@@ -45,14 +45,14 @@ func GetAlbums(c *gin.Context)  {
 	albumsInMongo := (*albumMongoService).FindAll();
 
 	// create a lookup map
-	albumsInMongoLookup := map[string]string{}
+	albumsInMongoLookup := map[uint]string{}
 	// convert the albumsInMongo into a map, the key is ObjectId(in postgres it is ContentId), value is content in mongodb
 	for _, v := range albumsInMongo {
-		albumsInMongoLookup[v.ID.Hex()] = v.Content
+		albumsInMongoLookup[v.AlbumId] = v.Content
 	}
 
 	for _, v := range albums {
-		if val, ok := albumsInMongoLookup[v.ContentId]; ok {
+		if val, ok := albumsInMongoLookup[v.Id]; ok {
 			response = append(response, models.AlbumResponse{ Id: v.Id, Title: v.Title, Artist: v.Artist, Price: v.Price, Content: val })
 		} else {
 			response = append(response, models.AlbumResponse{ Id: v.Id, Title: v.Title, Artist: v.Artist, Price: v.Price, })
@@ -80,10 +80,10 @@ func GetAlbumById(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: "Invalid Album Id"})
 	}
 
-    album, _ := (*albumService).FindById(int(id))
-	objectId, err := primitive.ObjectIDFromHex(album.ContentId);
+    album, _ := (*albumService).FindById(uint(id))
+	// objectId, err := primitive.ObjectIDFromHex(album.ContentId);
 
-	albumInMongoDb := (*albumMongoService).FindById(objectId)
+	albumInMongoDb := (*albumMongoService).FindById(uint(album.Id))
 
 	response := models.AlbumResponse{Id: album.Id, Title: album.Title, Artist: album.Artist, Price: album.Price, Content: albumInMongoDb.Content}
 
@@ -113,18 +113,19 @@ func CreateAlbum(c *gin.Context) {
         return
     }
 
-	contentId := (*albumMongoService).Create(entities.AlbumMongoDB{Name: newAlbum.Title, Content: newAlbum.Content})
+	album := entities.Album{Title: newAlbum.Title, Artist: newAlbum.Artist, Price: newAlbum.Price}
+    album, err := (*albumService).Create(album)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
+	}
+
+	contentId := (*albumMongoService).Create(&entities.AlbumMongoDB{Name: newAlbum.Title, Content: newAlbum.Content, AlbumId: album.Id})
 
 	if contentId == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, models.Error{Message: "Unable to save content to db"})
 		return
 	}
 
-	album := entities.Album{Title: newAlbum.Title, Artist: newAlbum.Artist, Price: newAlbum.Price, ContentId: contentId}
-    album, err := (*albumService).Create(album)
-	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
-	}
     c.IndentedJSON(http.StatusCreated, album)
 }
 
@@ -139,6 +140,7 @@ func CreateAlbum(c *gin.Context) {
 // @Router /albums/{id} [delete]
 func DeleteAlbumById(c *gin.Context) {
 	value := c.Param("id")
+	fmt.Println("value", value)
 	id, err := strconv.ParseInt(value, 10, 0)
 
 	if err != nil {
@@ -146,20 +148,20 @@ func DeleteAlbumById(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: "Invalid Album Id"})
 	}
 
-	albumInDb, err := (*albumService).FindById(int(id))
+	// albumInDb, err := (*albumService).FindById(uint(id))
 
-	if err != nil {
-		c.IndentedJSON(http.StatusNotFound,  models.Error{Message: err.Error()})
-	}
+	// if err != nil {
+	// 	c.IndentedJSON(http.StatusNotFound,  models.Error{Message: err.Error()})
+	// }
 
-	err = (*albumService).Delete(int(id))
+	err = (*albumService).Delete(uint(id))
 
 	if err != nil {
 		c.IndentedJSON(http.StatusNotFound, models.Error{Message: err.Error()})
 	}
 
-	objectId, _ := primitive.ObjectIDFromHex(albumInDb.ContentId);
-	isDeleteOk := (*albumMongoService).Delete(objectId)
+	// objectId, _ := primitive.ObjectIDFromHex(albumInDb.ContentId);
+	isDeleteOk := (*albumMongoService).Delete(uint(id))
 
 	if isDeleteOk {
 		c.IndentedJSON(http.StatusAccepted, nil)

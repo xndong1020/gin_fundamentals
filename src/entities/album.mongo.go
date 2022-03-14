@@ -6,5 +6,5 @@ type AlbumMongoDB struct {
 	ID     primitive.ObjectID    `bson:"_id,omitempty"`
 	Name  string                 `bson:"name,omitempty"`
 	Content string               `bson:"content,omitempty"`
-	// Tags   []string           `bson:"tags,omitempty"`
+	AlbumId uint  				 `bson:"albumId,omitempty"`
 }

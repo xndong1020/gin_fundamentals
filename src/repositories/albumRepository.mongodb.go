@@ -11,9 +11,9 @@ import (
 
 type IAlbumMongoDBRepository interface {
 	FindAll() []entities.AlbumMongoDB
-	FindById(id primitive.ObjectID) entities.AlbumMongoDB
-	Create(newAlbum entities.AlbumMongoDB) string
-	Delete(id primitive.ObjectID) bool
+	FindById(albumId uint) entities.AlbumMongoDB
+	Create(newAlbum *entities.AlbumMongoDB) string
+	Delete(albumId uint) bool
 }
 
 type albumMongoDBRepository struct {
@@ -47,16 +47,16 @@ func (albumRepo *albumMongoDBRepository) FindAll() []entities.AlbumMongoDB  {
 	return results
 }
 
-func (albumRepo *albumMongoDBRepository) FindById(id primitive.ObjectID) entities.AlbumMongoDB  {
+func (albumRepo *albumMongoDBRepository) FindById(albumId uint) entities.AlbumMongoDB  {
 	var album entities.AlbumMongoDB
-	if err :=  albumRepo.dbContext.Collection("albums").FindOne(context.TODO(), bson.M{"_id": id}).Decode(&album); err != nil {
+	if err :=  albumRepo.dbContext.Collection("albums").FindOne(context.TODO(), bson.M{"albumId": albumId}).Decode(&album); err != nil {
         panic(err)
 	}
 	return album
 }
 
-func (albumRepo *albumMongoDBRepository) Create(newAlbum entities.AlbumMongoDB) string {
-	result, err := albumRepo.dbContext.Collection("albums").InsertOne(context.TODO(), newAlbum)
+func (albumRepo *albumMongoDBRepository) Create(newAlbum *entities.AlbumMongoDB) string {
+	result, err := albumRepo.dbContext.Collection("albums").InsertOne(context.TODO(), *newAlbum)
 
 	if err != nil {
 		panic(err)
@@ -69,12 +69,11 @@ func (albumRepo *albumMongoDBRepository) Create(newAlbum entities.AlbumMongoDB) 
 	return ""
 }
 
-func (albumRepo *albumMongoDBRepository) Delete(id primitive.ObjectID) bool {
-	result, err :=  albumRepo.dbContext.Collection("albums").DeleteOne(context.TODO(), bson.M{"_id": id}) 
+func (albumRepo *albumMongoDBRepository) Delete(albumId uint) bool {
+	result, err :=  albumRepo.dbContext.Collection("albums").DeleteOne(context.TODO(), bson.M{"albumId": albumId}) 
 	
 	if err != nil {
         panic(err)
 	}
-
 	return result.DeletedCount > 0
 }

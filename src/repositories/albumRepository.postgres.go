@@ -12,9 +12,9 @@ import (
 
 type IAlbumRepository interface {
 	FindAll() ([]entities.Album, error)
-	FindById(id int) (entities.Album, error)
+	FindById(id uint) (entities.Album, error)
 	Create(newAlbum entities.Album) (entities.Album, error)
-	Delete(id int) error
+	Delete(id uint) error
 }
 
 type albumRepository  struct {
@@ -43,7 +43,7 @@ func (repo *albumRepository) FindAll() ([]entities.Album, error) {
 	return albums, result.Error
 }
 
-func (repo *albumRepository) FindById(id int) (entities.Album, error) {
+func (repo *albumRepository) FindById(id uint) (entities.Album, error) {
 	album := entities.Album{}
 	result := repo.dbContext.Debug().Find(&album, "id", id)
 	return album, result.Error
@@ -54,7 +54,7 @@ func (repo *albumRepository) Create(newAlbum entities.Album) (entities.Album, er
 	return newAlbum, result.Error
 }
 
-func (repo *albumRepository) Delete(id int) error {
+func (repo *albumRepository) Delete(id uint) error {
 	targetAlbum := entities.Album{}
 	result := repo.dbContext.Debug().Find(&targetAlbum, "id", id)
 	if result.Error != nil {

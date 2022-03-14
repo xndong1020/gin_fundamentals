@@ -7,9 +7,9 @@ import (
 
 type IAlbumService interface {
 	FindAll() ([]entities.Album, error)
-	FindById(id int) (entities.Album, error)
+	FindById(id uint) (entities.Album, error)
 	Create(newAlbum entities.Album) (entities.Album, error)
-	Delete(id int) error
+	Delete(id uint) error
 }
 
 type albumService struct {
@@ -28,7 +28,7 @@ func (service *albumService) FindAll() ([]entities.Album, error) {
 	return albums, err 
 }
 
-func (service *albumService) FindById(id int) (entities.Album, error) {
+func (service *albumService) FindById(id uint) (entities.Album, error) {
 	repo := *service.repo
 	album, err := repo.FindById(id);
 	return album, err
@@ -40,7 +40,7 @@ func (service *albumService) Create(newAlbum entities.Album) (entities.Album, er
 	return album, err
 }
 
-func (service *albumService) Delete(id int) error {
+func (service *albumService) Delete(id uint) error {
 	repo := *service.repo
 	err := repo.Delete(id);
 	return err
