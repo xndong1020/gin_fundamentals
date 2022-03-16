@@ -112,7 +112,7 @@ func CreateAlbum(c *gin.Context) {
 	}
 
 	album := entities.Album{Title: newAlbum.Title, Artist: newAlbum.Artist, Price: newAlbum.Price}
-	album, err := (*albumService).Create(album)
+	album, err := (*albumService).Create(&album)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
 	}

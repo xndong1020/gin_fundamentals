@@ -1,7 +1,7 @@
 package services
 
 import (
-	entities "acy.com/api/src/entities"
+	"acy.com/api/src/entities"
 	"acy.com/api/src/repositories"
 )
 

@@ -3,7 +3,7 @@ package repositories
 import (
 	"database/sql"
 
-	entities "acy.com/api/src/entities"
+	"acy.com/api/src/entities"
 	libs "acy.com/api/src/lib"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
@@ -13,7 +13,7 @@ import (
 type IAlbumRepository interface {
 	FindAll() ([]entities.Album, error)
 	FindById(id uint) (entities.Album, error)
-	Create(newAlbum entities.Album) (entities.Album, error)
+	Create(newAlbum *entities.Album) (entities.Album, error)
 	Update(id uint, column string, value interface{})
 	Delete(id uint) error
 }
@@ -50,9 +50,9 @@ func (repo *albumRepository) FindById(id uint) (entities.Album, error) {
 	return album, result.Error
 }
 
-func (repo *albumRepository) Create(newAlbum entities.Album) (entities.Album, error) {
+func (repo *albumRepository) Create(newAlbum *entities.Album) (entities.Album, error) {
 	result := repo.dbContext.Debug().Create(&newAlbum)
-	return newAlbum, result.Error
+	return *newAlbum, result.Error
 }
 
 func (repo *albumRepository) Update(id uint, column string, value interface{}) {

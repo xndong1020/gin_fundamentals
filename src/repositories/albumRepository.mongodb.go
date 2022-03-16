@@ -3,7 +3,7 @@ package repositories
 import (
 	"context"
 
-	entities "acy.com/api/src/entities"
+	"acy.com/api/src/entities"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"

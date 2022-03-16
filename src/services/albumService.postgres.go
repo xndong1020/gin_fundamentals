@@ -1,14 +1,14 @@
 package services
 
 import (
-	entities "acy.com/api/src/entities"
+	"acy.com/api/src/entities"
 	"acy.com/api/src/repositories"
 )
 
 type IAlbumService interface {
 	FindAll() ([]entities.Album, error)
 	FindById(id uint) (entities.Album, error)
-	Create(newAlbum entities.Album) (entities.Album, error)
+	Create(newAlbum *entities.Album) (entities.Album, error)
 	Delete(id uint) error
 }
 
@@ -36,7 +36,7 @@ func (service *albumService) FindById(id uint) (entities.Album, error) {
 	return albumInDb, err
 }
 
-func (service *albumService) Create(newAlbum entities.Album) (entities.Album, error) {
+func (service *albumService) Create(newAlbum *entities.Album) (entities.Album, error) {
 	album, err := (*service.repo).Create(newAlbum)
 	return album, err
 }

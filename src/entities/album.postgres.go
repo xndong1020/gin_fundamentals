@@ -1,4 +1,4 @@
-package models
+package entities
 
 type Album struct {
     Id     uint  `json:"id" binding:"required,numeric,min=1" gorm:"primaryKey;autoIncrement;notnull"`
