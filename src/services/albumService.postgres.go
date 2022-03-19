@@ -6,7 +6,7 @@ import (
 )
 
 type IAlbumService interface {
-	FindAll() ([]entities.Album, error)
+	FindAll(page, pageSize int) ([]entities.Album, error)
 	FindById(id uint) (entities.Album, error)
 	Create(newAlbum *entities.Album) (entities.Album, error)
 	Delete(id uint) error
@@ -23,8 +23,8 @@ func AlbumService(repo *repositories.IAlbumRepository) *albumService {
 
 /*** interface implementations ***/
 
-func (service *albumService) FindAll() ([]entities.Album, error) {
-	albums, err := (*service.repo).FindAll()
+func (service *albumService) FindAll(page, pageSize int) ([]entities.Album, error) {
+	albums, err := (*service.repo).FindAll(page, pageSize)
 	return albums, err
 }
 

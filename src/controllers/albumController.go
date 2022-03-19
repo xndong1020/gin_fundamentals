@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"acy.com/api/src/dependencies"
-	entities "acy.com/api/src/entities"
+	"acy.com/api/src/entities"
 	"acy.com/api/src/models"
 	"github.com/gin-gonic/gin"
 )
@@ -29,14 +29,25 @@ var albumMongoService = dependencies.InitializeAlbumMongoDBService()
 
 // GetAlbums @Summary Get Albums list
 // @ID get-albums-list
-// @Description Get Albums list
+// @Description Get Albums list with pagination
 // @Tags Album
+// @Accept  json
 // @Produce json
+// @Param page query int true "pagination current page" default(0)
+// @Param page_size query int true "pagination page_size" default(0)
 // @Success 200 {object} []models.AlbumResponse
 // @Router /albums [get]
 func GetAlbums(c *gin.Context) {
 	var response []models.AlbumResponse
-	albums, err := (*albumService).FindAll()
+	page, _ := strconv.Atoi(c.Query("page"))
+
+    if page == 0 {
+      page = 1
+    }
+
+	pageSize, _ := strconv.Atoi(c.Query("page_size"))
+
+	albums, err := (*albumService).FindAll(page, pageSize)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
 	}
@@ -98,8 +109,8 @@ func GetAlbumById(c *gin.Context) {
 // @Description Create new album
 // @Tags Album
 // @Produce json
-// @Param data body models.Album true "album data"
-// @Success 200 {object} models.Album
+// @Param data body entities.Album true "album data"
+// @Success 200 {object} entities.Album
 // @Failure 404 {object} models.Error
 // @Router /albums [post]
 func CreateAlbum(c *gin.Context) {

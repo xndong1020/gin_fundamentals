@@ -44,7 +44,7 @@ var _ = Describe("Test Repository", func() {
 
 				mock.ExpectQuery(regexp.QuoteMeta(sqlSelectAll)).WillReturnRows(rows)
 
-				albums, err := repository.FindAll()
+				albums, err := repository.FindAll(0, 3)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(albums).Should(Equal([]entities.Album{ *fakeAlbum1, *fakeAlbum2 } ))
 			})
@@ -52,7 +52,7 @@ var _ = Describe("Test Repository", func() {
 		It("not found", func() {
                 // ignore sql match
                 mock.ExpectQuery(`.+`).WillReturnRows(sqlmock.NewRows(nil))
-                albums, err := repository.FindAll()
+                albums, err := repository.FindAll(0, 3)
 				Expect(err).ShouldNot(HaveOccurred())
                 Expect(albums).Should(Equal([]entities.Album{}))
         })

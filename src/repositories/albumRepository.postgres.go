@@ -11,7 +11,7 @@ import (
 )
 
 type IAlbumRepository interface {
-	FindAll() ([]entities.Album, error)
+	FindAll(page, pageSize int) ([]entities.Album, error)
 	FindById(id uint) (entities.Album, error)
 	Create(newAlbum *entities.Album) (entities.Album, error)
 	Update(id uint, column string, value interface{})
@@ -37,9 +37,18 @@ func NewAlbumRepository(sqlDB *sql.DB) *AlbumRepository {
 }
 
 // FindAll /* interface implementations */
-func (repo *AlbumRepository) FindAll() ([]entities.Album, error) {
+
+func (repo *AlbumRepository) FindAll(page, pageSize int) ([]entities.Album, error) {
 	var albums []entities.Album
-	result := repo.dbContext.Debug().Find(&albums)
+	var result *gorm.DB
+
+	if pageSize <= 0 {
+		result = repo.dbContext.Debug().Find(&albums)
+	} else {
+		offset := (page - 1) * pageSize
+		result = repo.dbContext.Debug().Offset(offset).Limit(pageSize).Find(&albums)
+	}
+
 	return albums, result.Error
 }
 
