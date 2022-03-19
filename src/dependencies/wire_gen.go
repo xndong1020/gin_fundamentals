@@ -14,7 +14,7 @@ import (
 
 func InitializeAlbumService() *services.IAlbumService {
 	sqlDB := db.PostgresDbProvider()
-	var albumRepository repositories.IAlbumRepository = repositories.AlbumRepository(sqlDB)
+	var albumRepository repositories.IAlbumRepository = repositories.NewAlbumRepository(sqlDB)
 	var albumService services.IAlbumService = services.AlbumService(&albumRepository)
 	return &albumService
 }
