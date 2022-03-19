@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "description": "This is a web api server.",
-        "title": "Swagger ACY API",
+        "title": "ACY Golang Training API",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",

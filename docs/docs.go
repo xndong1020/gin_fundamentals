@@ -239,7 +239,7 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "",
 	BasePath:         "/api/v1",
 	Schemes:          []string{},
-	Title:            "Swagger ACY API",
+	Title:            "ACY Golang Training API",
 	Description:      "This is a web api server.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

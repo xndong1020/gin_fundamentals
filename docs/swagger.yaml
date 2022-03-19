@@ -50,7 +50,7 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
-  title: Swagger ACY API
+  title: ACY Golang Training API
   version: "1.0"
 paths:
   /albums:
