@@ -35,6 +35,23 @@ definitions:
       title:
         type: string
     type: object
+  models.CreateAlbumDto:
+    properties:
+      artist:
+        type: string
+      content:
+        type: string
+      price:
+        minimum: 0
+        type: number
+      title:
+        type: string
+    required:
+    - artist
+    - content
+    - price
+    - title
+    type: object
   models.Error:
     properties:
       message:
@@ -92,7 +109,7 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/entities.Album'
+          $ref: '#/definitions/models.CreateAlbumDto'
       produces:
       - application/json
       responses:

@@ -6,6 +6,7 @@ import (
 	"acy.com/api/src/controllers"
 	libs "acy.com/api/src/lib"
 	"acy.com/api/src/middlewares"
+	
 	"github.com/gin-gonic/gin"
 
 	swaggerFiles "github.com/swaggo/files"
@@ -47,12 +48,12 @@ func main() {
 
 	v1 := r.Group("/api/v1")
 	{
-		admin := v1.Group("/albums")
+		albums := v1.Group("/albums")
 
-		admin.GET("/", controllers.GetAlbums)
-		admin.GET("/:id", controllers.GetAlbumById)
-		admin.POST("/", controllers.CreateAlbum)
-		admin.DELETE("/:id", controllers.DeleteAlbumById)
+		albums.GET("/", controllers.GetAlbums)
+		albums.GET("/:id", controllers.GetAlbumById)
+		albums.POST("/", controllers.CreateAlbum)
+		albums.DELETE("/:id", controllers.DeleteAlbumById)
 	}
 
 	err := r.Run(":3000")

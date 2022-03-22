@@ -84,7 +84,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/entities.Album"
+                            "$ref": "#/definitions/models.CreateAlbumDto"
                         }
                     }
                 ],
@@ -216,6 +216,30 @@ const docTemplate = `{
                 },
                 "price": {
                     "type": "number"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.CreateAlbumDto": {
+            "type": "object",
+            "required": [
+                "artist",
+                "content",
+                "price",
+                "title"
+            ],
+            "properties": {
+                "artist": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number",
+                    "minimum": 0
                 },
                 "title": {
                     "type": "string"

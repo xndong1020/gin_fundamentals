@@ -24,8 +24,8 @@ type AlbumRepository struct {
 }
 
 // AlbumRepository constructor
-func NewAlbumRepository(sqlDB *sql.DB) *AlbumRepository {
-	gormDB, err := gorm.Open(postgres.New(postgres.Config{Conn: sqlDB}), &gorm.Config{})
+func NewAlbumRepository(conn *sql.DB) *AlbumRepository {
+	gormDB, err := gorm.Open(postgres.New(postgres.Config{Conn: conn}), &gorm.Config{})
 	logger := libs.NewZapLogger()
 
 	if err != nil {

@@ -13,8 +13,8 @@ import (
 // Injectors from wire.go:
 
 func InitializeAlbumService() *services.IAlbumService {
-	sqlDB := db.PostgresDbProvider()
-	var albumRepository repositories.IAlbumRepository = repositories.NewAlbumRepository(sqlDB)
+	conn := db.PostgresDbProvider()
+	var albumRepository repositories.IAlbumRepository = repositories.NewAlbumRepository(conn)
 	var albumService services.IAlbumService = services.AlbumService(&albumRepository)
 	return &albumService
 }

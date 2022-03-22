@@ -109,7 +109,7 @@ func GetAlbumById(c *gin.Context) {
 // @Description Create new album
 // @Tags Album
 // @Produce json
-// @Param data body entities.Album true "album data"
+// @Param data body models.CreateAlbumDto true "album data"
 // @Success 200 {object} entities.Album
 // @Failure 404 {object} models.Error
 // @Router /albums [post]
