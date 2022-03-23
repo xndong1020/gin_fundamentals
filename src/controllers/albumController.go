@@ -9,13 +9,9 @@ import (
 	"acy.com/api/src/entities"
 	"acy.com/api/src/models"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// var albums = []models.Album{
-// 	{Id: 1, Title: "Blue Train", Artist: "John Coltrane", Price: 56.99},
-//     {Id: 2, Title: "Jeru", Artist: "Gerry Mulligan", Price: 17.99},
-//     {Id: 3, Title: "Sarah Vaughan and Clifford Brown", Artist: "Sarah Vaughan", Price: 39.99},
-// }
 // sqlDB := db.PostgresDbProvider()
 // var albumRepository repositories.IAlbumRepository = repositories.AlbumRepository(sqlDB)
 // var albumService services.IAlbumService = services.AlbumService(&albumRepository)
@@ -128,7 +124,7 @@ func CreateAlbum(c *gin.Context) {
 		c.IndentedJSON(http.StatusBadRequest, models.Error{Message: err.Error()})
 	}
 
-	contentId := (*albumMongoService).Create(&entities.AlbumMongoDB{Name: newAlbum.Title, Content: newAlbum.Content, AlbumId: album.Id})
+	contentId := (*albumMongoService).Create(&entities.AlbumMongoDB{ ID: primitive.NewObjectID(), Name: newAlbum.Title, Content: newAlbum.Content, AlbumId: album.Id})
 
 	if contentId == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, models.Error{Message: "Unable to save content to db"})
